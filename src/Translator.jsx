@@ -30,7 +30,7 @@ export default function Translator() {
       method: "POST",
       headers: {
         "content-type": "application/json",
-        "X-RapidAPI-Key": "afb8d15934msh8d9829b963bb951p1b935fjsn03ec25553335",
+        "X-RapidAPI-Key": import.meta.env.VITE_API_KEY,
         "X-RapidAPI-Host": "microsoft-translator-text.p.rapidapi.com",
       },
       body: JSON.stringify([
