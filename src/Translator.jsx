@@ -48,12 +48,12 @@ export default function Translator() {
     setInputFormat(outputFormat);
     setOutputFormat(value);
     setInputText("");
-    setTranslatedText("Translation");
+    setTranslatedText("");
   };
 
   const handleRemoveInputText = () => {
     setInputText("");
-    setTranslatedText("Translation");
+    setTranslatedText("");
   };
 
   const handleTranslate = async () => {
