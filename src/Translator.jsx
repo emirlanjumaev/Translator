@@ -1,11 +1,23 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import languageList from "./language.json";
+import { useDebouncedCallback } from "use-debounce";
+
+import "regenerator-runtime/runtime";
+import SpeechRecognition, {
+  useSpeechRecognition,
+} from "react-speech-recognition";
+import { IoVolumeHighOutline } from "react-icons/io5";
+
+import { PiMicrophone } from "react-icons/pi";
 
 export default function Translator() {
+  const { transcript, finalTranscript } = useSpeechRecognition();
+
   const [inputFormat, setInputFormat] = useState("en");
   const [outputFormat, setOutputFormat] = useState("hi");
   const [translatedText, setTranslatedText] = useState("Translation");
   const [inputText, setInputText] = useState("");
+  const [load, setLoad] = useState(false);
 
   const handleReverseLanguage = () => {
     const value = inputFormat;
@@ -22,8 +34,6 @@ export default function Translator() {
 
   const handleTranslate = async () => {
     if (!inputText || !inputFormat || !outputFormat) return;
-    document.querySelector(".fa.fa-spinner.fa-spin").style.display = "block";
-    document.querySelector(".translate").style.display = "none";
 
     const url = `https://microsoft-translator-text.p.rapidapi.com/translate?to%5B0%5D=${outputFormat}&api-version=3.0&profanityAction=NoAction&textType=plain`;
     const options = {
@@ -39,20 +49,34 @@ export default function Translator() {
         },
       ]),
     };
+    setLoad(true);
     try {
       const response = await fetch(url, options);
       const result = await response.text();
-      console.log(result);
       const responseObject = JSON.parse(result);
       const translation = responseObject[0].translations[0].text;
       setTranslatedText(translation);
     } catch (error) {
       console.log(error);
       alert("Please Try Again! Some Error Occurred at your side");
+    } finally {
+      setLoad(false);
     }
-    document.querySelector(".fa.fa-spinner.fa-spin").style.display = "none";
-    document.querySelector(".translate").style.display = "block";
   };
+
+  useEffect(() => {
+    handleTranslate();
+  }, [outputFormat]);
+
+  const debounced = useDebouncedCallback((value) => {
+    handleTranslate();
+  }, 500);
+
+  useEffect(() => {
+    setInputText(transcript);
+    debounced();
+  }, [transcript]);
+
   return (
     <div className="container">
       <div className="row1">
@@ -96,7 +120,15 @@ export default function Translator() {
         </select>
       </div>
       <div className="row2">
-        <div className="inputText">
+        <div
+          className="inputText"
+          style={{
+            // border: "1px solid gray",
+            borderRadius: "6px",
+            overflow: "hidden",
+            boxShadow: "0px 0px 1px black",
+          }}
+        >
           <svg
             className="removeinput"
             style={{ display: inputText.length ? "block" : "none" }}
@@ -111,16 +143,33 @@ export default function Translator() {
             type="text"
             value={inputText}
             placeholder="Enter Text"
-            onChange={(e) => setInputText(e.target.value)}
+            onChange={(e) => {
+              setInputText(e.target.value);
+              debounced(handleTranslate);
+            }}
           />
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              height: "20%",
+            }}
+          >
+            <span
+              onClick={SpeechRecognition.startListening}
+              className="span"
+              style={{ margin: "0 10px 10px 10px" }}
+            >
+              <PiMicrophone style={{ fontSize: "21px" }} />
+            </span>
+            {/* <span className="span" style={{ margin: "0 10px 10px 10px" }}>
+              <IoVolumeHighOutline style={{ fontSize: "21px" }} />
+            </span> */}
+          </div>
         </div>
-        <div className="outputText">{translatedText}</div>
-      </div>
-      <div className="row3">
-        <button className="btn" onClick={handleTranslate}>
-          <i className="fa fa-spinner fa-spin"></i>
-          <span className="translate">Translate</span>
-        </button>
+        <div className="outputText">
+          {load ? <span>Идет перевод...</span> : translatedText}
+        </div>
       </div>
     </div>
   );
