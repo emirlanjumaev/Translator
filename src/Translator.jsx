@@ -7,17 +7,41 @@ import SpeechRecognition, {
   useSpeechRecognition,
 } from "react-speech-recognition";
 import { IoVolumeHighOutline } from "react-icons/io5";
+import { useSpeechSynthesis } from "react-speech-kit";
 
 import { PiMicrophone } from "react-icons/pi";
 
 export default function Translator() {
   const { transcript, finalTranscript } = useSpeechRecognition();
 
+  const { speak, voices } = useSpeechSynthesis();
   const [inputFormat, setInputFormat] = useState("en");
-  const [outputFormat, setOutputFormat] = useState("hi");
-  const [translatedText, setTranslatedText] = useState("Translation");
+  const [outputFormat, setOutputFormat] = useState("ru");
+  const [translatedText, setTranslatedText] = useState("");
   const [inputText, setInputText] = useState("");
   const [load, setLoad] = useState(false);
+  const [voice, setVoice] = useState({
+    v1: null,
+    v2: null,
+  });
+
+  function getCurrentVoice() {
+    const googleVoices = voices.filter((item) => item.name.includes("Google"));
+    const v1 = googleVoices.find((item) => item.lang.includes(inputFormat));
+    const v2 = googleVoices.find((item) => item.lang.includes(outputFormat));
+
+    setVoice(() => {
+      return {
+        v1: v1 || 0,
+        v2: v2 || 0,
+      };
+    });
+
+    return {
+      v1,
+      v2,
+    };
+  }
 
   const handleReverseLanguage = () => {
     const value = inputFormat;
@@ -33,7 +57,8 @@ export default function Translator() {
   };
 
   const handleTranslate = async () => {
-    if (!inputText || !inputFormat || !outputFormat) return;
+    if (!inputText || !inputFormat || !outputFormat)
+      return setTranslatedText("");
 
     const url = `https://microsoft-translator-text.p.rapidapi.com/translate?to%5B0%5D=${outputFormat}&api-version=3.0&profanityAction=NoAction&textType=plain`;
     const options = {
@@ -65,6 +90,10 @@ export default function Translator() {
   };
 
   useEffect(() => {
+    getCurrentVoice();
+  }, [voices]);
+
+  useEffect(() => {
     handleTranslate();
   }, [outputFormat]);
 
@@ -82,7 +111,9 @@ export default function Translator() {
       <div className="row1">
         <select
           value={inputFormat}
-          onChange={(e) => setInputFormat(e.target.value)}
+          onChange={(e) => {
+            setInputFormat(e.target.value), getCurrentVoice();
+          }}
         >
           {Object.keys(languageList).map((key, index) => {
             const language = languageList[key];
@@ -155,20 +186,60 @@ export default function Translator() {
               height: "20%",
             }}
           >
-            <span
+            <button
               onClick={SpeechRecognition.startListening}
               className="span"
               style={{ margin: "0 10px 10px 10px" }}
             >
               <PiMicrophone style={{ fontSize: "21px" }} />
-            </span>
-            {/* <span className="span" style={{ margin: "0 10px 10px 10px" }}>
+            </button>
+            <button
+              disabled={voice.v1 === 0 || !inputText}
+              onClick={() => {
+                speak({ text: inputText, voice: voice.v1 });
+              }}
+              className="span"
+              style={{ margin: "0 10px 10px 10px" }}
+            >
               <IoVolumeHighOutline style={{ fontSize: "21px" }} />
-            </span> */}
+            </button>
           </div>
         </div>
-        <div className="outputText">
-          {load ? <span>Идет перевод...</span> : translatedText}
+        <div
+          className="outputText"
+          style={{ display: "flex", flexDirection: "column" }}
+        >
+          {
+            <span style={{ padding: "0px 10px 10px 10px" }}>
+              {load ? "Идет перевод..." : translatedText}
+            </span>
+          }
+          <div
+            style={{
+              marginTop: "auto",
+              display: "flex",
+              alignItems: "center",
+              height: "20%",
+            }}
+          >
+            <button
+              style={{ margin: "0 10px 10px 10px" }}
+              onClick={SpeechRecognition.startListening}
+              className="span"
+            >
+              <PiMicrophone style={{ fontSize: "21px" }} />
+            </button>
+            <button
+              disabled={voice.v2 === 0 || !translatedText}
+              onClick={() => {
+                speak({ text: translatedText, voice: voice.v2 });
+              }}
+              className="span"
+              style={{ margin: "0 10px 10px 10px" }}
+            >
+              <IoVolumeHighOutline style={{ fontSize: "21px" }} />
+            </button>
+          </div>
         </div>
       </div>
     </div>

@@ -1,6 +1,6 @@
 /* Translator.css */
 
-body {
+* {
   padding: 0;
   margin: 0;
   box-sizing: border-box;
@@ -70,22 +70,25 @@ option {
   font-family: monospace;
   box-sizing: border-box;
   padding: 15px;
+  padding-bottom: 0;
   font-size: 20px;
+  padding-left: 0;
   border-radius: 8px;
   overflow: auto;
-  background: #edeff0;
+  background: #f8f8f8;
   text-align: left;
 }
 .span {
   width: 40px;
   height: 40px;
-  background: rgb(237 239 240);
+  background: rgb(236, 236, 236);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-
+  outline: none;
+  border: none;
   transition: all 0.1s linear;
 }
 .span:hover {
